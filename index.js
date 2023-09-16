@@ -38,6 +38,7 @@ router.get('/load', (req, res) => {
     res.json({load: flHookJson.serverload});
 });
 
+// /online GET request
 router.get('/online', (req, res) => {
     res.json(flHookJson.players);
 });
@@ -51,6 +52,7 @@ const parsePlayers = () => {
     players = new Map(unfiledPlayers.map(element => [element.name, element]));
 }
 
+// Parses the stats.json file exported by the FLHook plugin
 const parseFLHookJson = () => {
     let rawdata = fs.readFileSync(process.env.FLHOOK_STATS_FILE).toString().replace(/\\/g, "\\\\");
     flHookJson = JSON.parse(rawdata);
