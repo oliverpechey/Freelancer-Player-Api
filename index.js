@@ -2,12 +2,14 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import playerParser from 'freelancer-save-parser';
+import fs from 'fs';
 
 // Inits
 dotenv.config();
 const router = express.Router();
 const app = express();
 let players = {};
+let flHookJson = '';
 
 // /all GET request
 router.get('/all/:sort?/:direction?', (req, res) => {
@@ -31,6 +33,11 @@ router.get('/player/:player', (req, res) => {
     res.json(players.get(req.params.player));
 });
 
+// /load GET request
+router.get('/load', (req, res) => {
+    res.json({load: flHookJson.serverload});
+})
+
 // Uses the freelancer-save-parser module to parse the player files
 const parsePlayers = () => {
     let unfiledPlayers = new playerParser.Parser()
@@ -40,7 +47,16 @@ const parsePlayers = () => {
     players = new Map(unfiledPlayers.map(element => [element.name, element]));
 }
 
+const parseFLHookJson = () => {
+    let rawdata = fs.readFileSync(process.env.FLHOOK_STATS_FILE).toString().replace(/\\/g, "\\\\");
+    flHookJson = JSON.parse(rawdata);
+}
+
 app.use('/', router);
 app.listen(process.env.PORT);
+
 parsePlayers();
+parseFLHookJson();
+
 setInterval(parsePlayers, process.env.PLAYER_FILE_INTERVAL * 1000);
+setInterval(parseFLHookJson, process.env.STATS_FILE_INTERVAL * 1000);
