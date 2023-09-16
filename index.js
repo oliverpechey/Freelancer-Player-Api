@@ -36,7 +36,11 @@ router.get('/player/:player', (req, res) => {
 // /load GET request
 router.get('/load', (req, res) => {
     res.json({load: flHookJson.serverload});
-})
+});
+
+router.get('/online', (req, res) => {
+    res.json(flHookJson.players);
+});
 
 // Uses the freelancer-save-parser module to parse the player files
 const parsePlayers = () => {
