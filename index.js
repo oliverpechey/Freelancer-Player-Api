@@ -45,9 +45,9 @@ router.get('/online', (req, res) => {
 
 // Uses the freelancer-save-parser module to parse the player files
 const parsePlayers = () => {
-    let unfiledPlayers = new playerParser.Parser()
-        .ParsePlayerFiles(process.env.SAVEPATH)
-        .SortPlayerFiles('LastSeen','Desc')
+    let unfiledPlayers = new playerParser.Parser('C:\\Freelancer HD Edition\\DATA')
+        .parsePlayerFiles(process.env.SAVEPATH)
+        .sortPlayerFiles('LastSeen','Desc')
         .players;
     players = new Map(unfiledPlayers.map(element => [element.name, element]));
 }
