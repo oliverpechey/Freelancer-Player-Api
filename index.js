@@ -3,6 +3,7 @@ import express from 'express';
 import dotenv from 'dotenv';
 import playerParser from 'freelancer-save-parser';
 import fs from 'fs';
+import { rateLimit } from 'express-rate-limit'
 
 // Inits
 dotenv.config();
@@ -10,6 +11,15 @@ const router = express.Router();
 const app = express();
 let players = {};
 let flHookJson = '';
+
+// API Limiter
+const limiter = rateLimit({
+	windowMs: 15 * 60 * 1000, // 15 minutes
+	limit: 100, // Limit each IP to 100 requests per `window` (here, per 15 minutes).
+	standardHeaders: 'draft-7', // draft-6: `RateLimit-*` headers; draft-7: combined `RateLimit` header
+	legacyHeaders: false, // Disable the `X-RateLimit-*` headers.
+});
+app.use(limiter);
 
 // /all GET request
 router.get('/all/:sort?/:direction?', (req, res) => {
@@ -45,9 +55,8 @@ router.get('/online', (req, res) => {
 
 // Uses the freelancer-save-parser module to parse the player files
 const parsePlayers = () => {
-    let unfiledPlayers = new playerParser.Parser('C:\\Freelancer HD Edition\\DATA')
-        .parsePlayerFiles(process.env.SAVEPATH)
-        .sortPlayerFiles('LastSeen','Desc')
+    let unfiledPlayers = new playerParser.Parser(process.env.INSTALLPATH, process.env.SAVEPATH)
+        .sort('LastSeen','Desc')
         .players;
     players = new Map(unfiledPlayers.map(element => [element.name, element]));
 }
