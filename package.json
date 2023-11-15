@@ -1,6 +1,6 @@
 {
   "name": "freelancer-player-api",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "An API to run on a machine running FLServer that will expose player information.",
   "main": "index.js",
   "type": "module",
