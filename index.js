@@ -14,38 +14,51 @@ let flHookJson = '';
 
 // API Limiter
 const limiter = rateLimit({
-	windowMs: 15 * 60 * 1000, // 15 minutes
-	limit: 100, // Limit each IP to 100 requests per `window` (here, per 15 minutes).
-	standardHeaders: 'draft-7', // draft-6: `RateLimit-*` headers; draft-7: combined `RateLimit` header
-	legacyHeaders: false, // Disable the `X-RateLimit-*` headers.
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    limit: 100, // Limit each IP to 100 requests per `window` (here, per 15 minutes).
+    standardHeaders: 'draft-7', // draft-6: `RateLimit-*` headers; draft-7: combined `RateLimit` header
+    legacyHeaders: false, // Disable the `X-RateLimit-*` headers.
 });
 app.use(limiter);
 
 // /all GET request
 router.get('/all/:sort?/:direction?', (req, res) => {
-    // Check to see if the sort parameter has been added and that the field exists
-    if(req.params.sort && players.entries().next().value[1][req.params.sort] != undefined) {
-        let sortedArray = [];
-        if(req.params.direction === 'asc') {
-            sortedArray = Array.from(players).sort((a, b) => a[1][req.params.sort] - b[1][req.params.sort]);
+    // Convert the map to an array
+    let playerArray = Array.from(players, ([, player]) => player);
+    // Check to see if the array is empty
+    if (playerArray.length === 0) {
+        res.status(500).send('No players found');
+        return;
+    }
+    // Check to see if the sort parameter has been added
+    if (!req.params.sort) {
+        res.json(playerArray);
+        return;
+    }
+    // Check that the field exists
+    if (playerArray[0][req.params.sort] != undefined) {
+        if (req.params.direction === 'asc') {
+            playerArray = playerArray.sort((a, b) => a[req.params.sort] - b[req.params.sort]);
         }
         else {
-            sortedArray = Array.from(players).sort((a, b) => b[1][req.params.sort] - a[1][req.params.sort]);
+            playerArray = playerArray.sort((a, b) => b[req.params.sort] - a[req.params.sort]);
         }
-        
-        players = new Map(sortedArray);
     }
-    res.json(Object.fromEntries(players));
+    else {
+        res.status(400).send('Invalid sort parameter');
+        return;
+    }
+    res.json(playerArray);
 });
 
 // /player GET request
 router.get('/player/:player', (req, res) => {
-    res.json(players.get(req.params.player));
+    res.json(players.get(req.params.player.toLowerCase()));
 });
 
 // /load GET request
 router.get('/load', (req, res) => {
-    res.json({load: flHookJson.serverload});
+    res.json({ load: flHookJson.serverload });
 });
 
 // /online GET request
@@ -56,9 +69,9 @@ router.get('/online', (req, res) => {
 // Uses the freelancer-save-parser module to parse the player files
 const parsePlayers = () => {
     let unfiledPlayers = new playerParser.Parser(process.env.INSTALLPATH, process.env.SAVEPATH)
-        .sort('LastSeen','Desc')
+        .sort('LastSeen', 'Desc')
         .players;
-    players = new Map(unfiledPlayers.map(element => [element.name, element]));
+    players = new Map(unfiledPlayers.map(element => [element.name.toLowerCase(), element]));
 }
 
 // Parses the stats.json file exported by the FLHook plugin
