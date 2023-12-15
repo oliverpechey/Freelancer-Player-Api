@@ -71,7 +71,7 @@ const parsePlayers = () => {
     let unfiledPlayers = new playerParser.Parser(process.env.INSTALLPATH, process.env.SAVEPATH)
         .sort('LastSeen', 'Desc')
         .players;
-    players = new Map(unfiledPlayers.map(element => [element.name.toLowerCase(), element]));
+    players = new Map(unfiledPlayers.filter(element => element.name).map(element => [element.name.toLowerCase(), element]));
 }
 
 // Parses the stats.json file exported by the FLHook plugin
