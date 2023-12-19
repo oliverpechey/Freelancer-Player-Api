@@ -48,6 +48,10 @@ router.get('/all/:sort?/:direction?', (req, res) => {
         res.status(400).send('Invalid sort parameter');
         return;
     }
+
+    // Filter out players without a ship
+    playerArray.filter(player => player.ship);
+    
     res.json(playerArray);
 });
 
