@@ -25,11 +25,14 @@ app.use(limiter);
 router.get('/all/:sort?/:direction?', (req, res) => {
     // Convert the map to an array
     let playerArray = Array.from(players, ([, player]) => player);
+
     // Check to see if the array is empty
     if (playerArray.length === 0) {
         res.status(500).send('No players found');
         return;
     }
+    // Filter out players without a ship
+    playerArray = playerArray.filter(player => player.ship);
     // Check to see if the sort parameter has been added
     if (!req.params.sort) {
         res.json(playerArray);
@@ -49,9 +52,6 @@ router.get('/all/:sort?/:direction?', (req, res) => {
         return;
     }
 
-    // Filter out players without a ship
-    playerArray.filter(player => player.ship);
-    
     res.json(playerArray);
 });
 
