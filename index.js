@@ -55,6 +55,20 @@ router.get('/all/:sort?/:direction?', (req, res) => {
     res.json(playerArray);
 });
 
+// /search GET request
+router.get('/search/:search', (req, res) => {
+    let playerArray = [];
+    players.forEach(player => {
+        for(let key in player) {
+            if (player[key]?.toString().toLowerCase().includes(req.params.search.toLowerCase())) {
+                playerArray.push(player);
+                break;
+            }
+        }
+    });
+    res.json(playerArray);
+});
+
 // /player GET request
 router.get('/player/:player', (req, res) => {
     res.json(players.get(req.params.player.toLowerCase()));
