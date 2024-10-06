@@ -10,7 +10,10 @@ dotenv.config();
 const router = express.Router();
 const app = express();
 let players = {};
+let playerArray = [];
 let flHookJson = '';
+let lastSort = '';
+let lastDirection = '';
 
 // API Limiter
 const limiter = rateLimit({
@@ -23,18 +26,14 @@ app.use(limiter);
 
 // /all GET request
 router.get('/all/:sort?/:direction?', (req, res) => {
-    // Convert the map to an array
-    let playerArray = Array.from(players, ([, player]) => player);
-
     // Check to see if the array is empty
     if (playerArray.length === 0) {
-        res.status(500).send('No players found');
+        res.status(400).send('No players found');
         return;
     }
-    // Filter out players without a ship
-    playerArray = playerArray.filter(player => player.ship);
-    // Check to see if the sort parameter has been added
-    if (!req.params.sort) {
+
+    // Check to see if the sort parameter has been added or whether its the same as last time
+    if (!req.params.sort || (req.params.sort === lastSort && req.params.direction === lastDirection)) {
         res.json(playerArray);
         return;
     }
@@ -46,6 +45,9 @@ router.get('/all/:sort?/:direction?', (req, res) => {
         else {
             playerArray = playerArray.sort((a, b) => b[req.params.sort] - a[req.params.sort]);
         }
+        // Set the last sort params
+        lastDirection = req.params.direction;
+        lastSort = req.params.sort;
     }
     else {
         res.status(400).send('Invalid sort parameter');
@@ -57,16 +59,16 @@ router.get('/all/:sort?/:direction?', (req, res) => {
 
 // /search GET request
 router.get('/search/:search', (req, res) => {
-    let playerArray = [];
+    let results = [];
     players.forEach(player => {
         for(let key in player) {
             if (player[key]?.toString().toLowerCase().includes(req.params.search.toLowerCase())) {
-                playerArray.push(player);
+                results.push(player);
                 break;
             }
         }
     });
-    res.json(playerArray);
+    res.json(results);
 });
 
 // /player GET request
@@ -89,7 +91,10 @@ const parsePlayers = () => {
     let unfiledPlayers = new playerParser.Parser(process.env.INSTALLPATH, process.env.SAVEPATH)
         .sort('LastSeen', 'Desc')
         .players;
-    players = new Map(unfiledPlayers.filter(element => element.name).map(element => [element.name.toLowerCase(), element]));
+    // Filter out blank names and no ship
+    playerArray = unfiledPlayers.filter(element => element.name && element.ship);
+    // Convert to map for easy retrieval on search
+    players = new Map(playerArray.map(element => [element.name.toLowerCase(), element]));
 }
 
 // Parses the stats.json file exported by the FLHook plugin
