@@ -91,6 +91,9 @@ const parsePlayers = () => {
     let unfiledPlayers = new playerParser.Parser(process.env.INSTALLPATH, process.env.SAVEPATH)
         .sort('LastSeen', 'Desc')
         .players;
+    // Set last sort/direction
+    lastSort = 'LastSeen';
+    lastDirection = 'desc';
     // Filter out blank names and no ship
     playerArray = unfiledPlayers.filter(element => element.name && element.ship);
     // Convert to map for easy retrieval on search
