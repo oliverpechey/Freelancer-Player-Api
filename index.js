@@ -39,12 +39,26 @@ router.get('/all/:sort?/:direction?', (req, res) => {
     }
     // Check that the field exists
     if (playerArray[0][req.params.sort] != undefined) {
-        if (req.params.direction === 'asc') {
-            playerArray = playerArray.sort((a, b) => a[req.params.sort] - b[req.params.sort]);
+        // Choose sort function based on type and direction
+        let sortFunction;
+        if(typeof playerArray[0][req.params.sort] === 'string') {
+            if (req.params.direction === 'asc') {
+                sortFunction = (a, b) => a[req.params.sort].localeCompare(b[req.params.sort], 'en', {sensitivity: 'base'});
+            }
+            else {
+                sortFunction = (a, b) => b[req.params.sort].localeCompare(a[req.params.sort], 'en', {sensitivity: 'base'});
+            }
         }
         else {
-            playerArray = playerArray.sort((a, b) => b[req.params.sort] - a[req.params.sort]);
+            if (req.params.direction === 'asc') {
+                sortFunction = (a, b) => a[req.params.sort] - b[req.params.sort];
+            }
+            else {
+                sortFunction = (a, b) => b[req.params.sort] - a[req.params.sort];
+            }
         }
+        // Sort the array
+        playerArray.sort(sortFunction);
         // Set the last sort params
         lastDirection = req.params.direction;
         lastSort = req.params.sort;
